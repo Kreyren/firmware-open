@@ -89,6 +89,7 @@
 						inputs.nixpkgs.legacyPackages.${system}.xz
 						inputs.nixpkgs.legacyPackages.${system}.rustc
 						inputs.nixpkgs.legacyPackages.${system}.cargo
+						inputs.nixpkgs.legacyPackages.${system}.uefitool
 					];
 					inputsFrom = [
 						config.mission-control.devShell

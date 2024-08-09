@@ -3,6 +3,8 @@
 
 set -e
 
+set -x # Debugging
+
 # FIXME-QA(Krey): Uppercase variables are not yours to play with, those are reserved for the system!
 
 # shellcheck source=./common.sh
@@ -53,7 +55,8 @@ cargo build --release
 
 status "Running coreboot-collector"
 
-sudo target/release/coreboot-collector > "$MODEL_DIR/coreboot-collector.txt"
+# FIXME(Krey): Allowing failure due to https://github.com/system76/coreboot-collector/issues/4
+sudo target/release/coreboot-collector > "$MODEL_DIR/coreboot-collector.txt" || true
 cd - || exit 1
 
 "$SCRIPT_DIR/coreboot-gpio.sh" "$MODEL_DIR/coreboot-collector.txt" > "$MODEL_DIR/gpio.c"
