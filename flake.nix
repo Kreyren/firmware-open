@@ -87,6 +87,8 @@
 						inputs.nixpkgs.legacyPackages.${system}.gnupatch # patch
 						inputs.nixpkgs.legacyPackages.${system}.gnutar # tar
 						inputs.nixpkgs.legacyPackages.${system}.xz
+						inputs.nixpkgs.legacyPackages.${system}.rustc
+						inputs.nixpkgs.legacyPackages.${system}.cargo
 					];
 					inputsFrom = [
 						config.mission-control.devShell
