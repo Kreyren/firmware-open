@@ -1,66 +1,79 @@
-#!/usr/bin/env bash
-# SPDX-License-Identifier: GPL-3.0-only
+#!/usr/bin/env sh
+# shellcheck shell=sh # POSIX
 
 # Build the coreboot toolchains
 
-# shellcheck disable=SC1091
-
 set -e
 
-. /etc/os-release
-if [ "$ID" = "arch" ] || [[ "$ID_LIKE" =~ "arch" ]]; then
-    sudo pacman -S --noconfirm \
-        bison \
-        bzip2 \
-        ca-certificates \
-        curl \
-        flex \
-        gcc \
-        gcc-ada \
-        make \
-        nss \
-        patch \
-        tar \
-        xz \
-        zlib
-elif [ "$ID" = "fedora" ] || [[ "$ID_LIKE" =~ "fedora" ]]; then
-    sudo dnf install --assumeyes \
-        bison \
-        bzip2 \
-        ca-certificates \
-        curl \
-        flex \
-        gcc \
-        gcc-c++ \
-        gcc-gnat \
-        make \
-        nss-devel \
-        patch \
-        tar \
-        xz \
-        zlib-devel
-elif [ "$ID" = "ubuntu" ] || [[ "$ID_LIKE" =~ "debian" ]]; then
-    sudo apt-get --quiet update
-    sudo apt-get --quiet install --no-install-recommends --assume-yes \
-        bison \
-        bzip2 \
-        ca-certificates \
-        curl \
-        flex \
-        g++ \
-        gcc \
-        gnat \
-        libnss3-dev \
-        make \
-        patch \
-        tar \
-        xz-utils \
-        zlib1g-dev
-else
-    printf "\e[1;31munsupported host:\e[0m %s\n" "$ID"
-    exit 1
-fi
+# shellcheck source=./common.sh
+. ./scripts/common.sh # Source common functionality
 
-make -C coreboot CPUS="$(nproc)" crossgcc-i386
-make -C coreboot CPUS="$(nproc)" crossgcc-x64
-make -C coreboot gitconfig
+case "$distro" in
+	arch:*)
+		sudo pacman -S --noconfirm \
+			bison \
+			bzip2 \
+			ca-certificates \
+			curl \
+			flex \
+			gcc \
+			gcc-ada \
+			make \
+			nss \
+			patch \
+			tar \
+			xz \
+			zlib
+	;;
+	fedora:*)
+		sudo dnf install --assumeyes \
+			bison \
+			bzip2 \
+			ca-certificates \
+			curl \
+			flex \
+			gcc \
+			gcc-c++ \
+			gcc-gnat \
+			make \
+			nss-devel \
+			patch \
+			tar \
+			xz \
+			zlib-devel
+	;;
+	NixOS:*)
+		[ -n "$nixInDevShell" ] || die 1 "When running on NixOS please make sure that you are using the provided development shell and then retry this script"
+	;;
+	ubuntu:*)
+		sudo apt-get --quiet update
+		sudo apt-get --quiet install --no-install-recommends --assume-yes \
+			bison \
+			bzip2 \
+			ca-certificates \
+			curl \
+			flex \
+			g++ \
+			gcc \
+			gnat \
+			libnss3-dev \
+			make \
+			patch \
+			tar \
+			xz-utils \
+			zlib1g-dev
+	;;
+	*) die 1 "Distribution '$distro' is not implemented, please add support in $0"
+esac
+
+nproc="$(nproc)"
+
+case "$distro" in
+	NixOS:*) true ;; # Do not build the toolchain on NixOS as it's already provided in devshell
+	arch:*|debian:*|fedora:*|ubuntu:*)
+		make -C coreboot CPUS="$nproc" crossgcc-i386
+		make -C coreboot CPUS="$nproc" crossgcc-x64
+		make -C coreboot gitconfig
+	;;
+	*) die 1 "Distro '$distro' is not implemented in $0, please contribute support"
+esac
